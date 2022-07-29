@@ -19,13 +19,20 @@ public class PlayerMovement : MonoBehaviour
 
     public Button ButtonJump;
 
+    private Vector3 initialPosition;
+
+    public Text score;
+    public int scoreValue;
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         Button btnJump = ButtonJump.GetComponent<Button>();
         btnJump.onClick.AddListener(TaskOnJump);
+        initialPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
         moveLeft = false;
         moveRight = false;
+        scoreValue = PlayerPrefs.GetInt("score");
     }
 
     public void PointerDownLeft()
@@ -72,10 +79,12 @@ public class PlayerMovement : MonoBehaviour
             rb.velocity = new Vector2(0, rb.velocity.y);
         }
 
-        if (Input.GetKey(KeyCode.Space)&& isGrounded == true)
+        if (Input.GetKey(KeyCode.Space) && isGrounded == true)
         {
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
         }
+
+        score.text = "Deaths: " + scoreValue.ToString();
     }
 
     void OnCollisionEnter2D(Collision2D collision)
@@ -84,10 +93,29 @@ public class PlayerMovement : MonoBehaviour
         {
             isGrounded = true;
         }
+
+        if (collision.gameObject.CompareTag("Respawn"))
+        {
+            this.gameObject.transform.position = initialPosition;
+            scoreValue += 1;
+        }
     }
 
     void OnCollisionExit2D(Collision2D collision)
+        {
+            isGrounded = false;
+        }
+
+    private void OnApplicationQuit()
     {
-        isGrounded = false;
+        Debug.Log("OnApplicationQuit");
+        PlayerPrefs.SetInt("score", scoreValue);
+        PlayerPrefs.Save();
+    }
+    private void OnApplicationPause(bool pause)
+    {
+        Debug.Log("OnApplicationPause " + pause);
+        PlayerPrefs.SetInt("score", scoreValue);
+        PlayerPrefs.Save();
     }
 }
